@@ -26,4 +26,23 @@
 
 ## Documentation
 
-详细的 v1 领域模型、系统架构和关键场景示例会维护在 `docs/` 中。
+- [Documentation index](./docs/README.md)
+- [Product language](./docs/product-language.md)
+- [Domain model v1](./docs/domain-model.md)
+- [Architecture v1](./docs/architecture.md)
+- [Domain examples](./docs/examples.md)
+
+核心模型可以概括为：
+
+```text
+Item
+= Identity
++ Inventory
++ Location
++ Attributes
++ State
++ Memory
++ History
+```
+
+其中 Note / NoteAttachment 是正式的一等实体：结构化属性负责“事实”，Note 负责用户自己的做法、提醒、图片与故事。
