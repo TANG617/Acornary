@@ -1,0 +1,12 @@
+.git
+node_modules
+dist
+apps/web/dist
+.env
+.local
+.codex
+output
+test-results
+playwright-report
+
+.pnpm-store

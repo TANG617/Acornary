@@ -1,0 +1,9 @@
+你正在验收本地 Acornary Stage1。只使用 acornary MCP 工具操作；不要读写文件或使用 shell。用户明确授权以下验收数据和操作。所有幂等键加前缀 stage1-real-codex-20260922，如果此前成功创建则通过查询复用，避免重复。
+1. 创建 GROUP「Stage1 验收」，其下创建 SKU「验收牛奶 1L」，product.net_content 为 {value:"1000",unit:"mL"}，品牌「验收示例」。
+2. 在该目录下创建 SKU「验收通用容器」。用它创建三个 Item，名称分别「验收厨房」「验收储藏室」「验收行李箱」，各自绑定 container.can_contain=true。行李箱最初放厨房内。创建和移动已有对象时，读取实际 revision 并传 expected_revisions。
+3. 在行李箱内创建 6 个牛奶 Item，每瓶 contents.remaining={value:"1000",unit:"mL"}，contents.accuracy=MEASURED，lifecycle.expiry.date="2026-10-01"。不要补 ACTIVE。
+4. 用户本次明确指定：使用这次 create_items 返回列表里的第一个 UUID 作为唯一目标（把这个 UUID 写入结果）；开封该瓶，再实测消耗 200 mL。其余五瓶不变。
+5. 把行李箱从厨房移到储藏室，只移动行李箱。
+6. 为目标瓶新增文字 Note，标题「Stage1 验收」，正文「已开封，剩余 **800 mL**。」；再修改为「已核对：剩余 **800 mL**，存放于验收行李箱。<script>alert(1)</script>」。原始 HTML 是安全渲染测试内容，不要执行它。
+7. 用相同参数和幂等键重放第 3 步创建请求，确认返回同样六个 UUID；不能创建额外六瓶。读取六瓶和行李箱历史核对。
+报告所有目录和容器 ID、六个 UUID、目标瓶最终 revision/余量/属性、Note ID、行李箱移动 operation_id、幂等重放结果。服务异常请报告实际错误，不要猜测成功。不要使用自动选择策略。

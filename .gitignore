@@ -1,0 +1,11 @@
+node_modules/
+dist/
+apps/web/dist/
+.env
+.local/
+.codex/config.toml
+output/
+playwright-report/
+test-results/
+
+.pnpm-store/
