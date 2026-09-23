@@ -12,7 +12,7 @@
 - AAAA／CNAME 无冲突。Caddy 已取得正式域名证书，公网 TLS 校验成功。用户交互创建预验收所有者后，应用启动并健康；公网 `/health`、`/login` 返回 200，匿名 `/api/context`、`/api/debug` 返回 401，`/mcp` 返回带资源元数据与 scope 的 401 OAuth challenge。授权服务器与受保护资源 discovery 均返回 200，CIMD 支持已声明。
 - 共享 Caddy 已挂载持久站点目录并加入独立入口网络，保留 Runbuoy 原 172.30.77.10 地址与证书卷；修改后 Runbuoy 公网 /readyz 为 ready。发布脚本已追加持久覆盖文件，两份已有 Runbuoy release 的配置校验通过，未运行整站重新构建。
 - 云运行账号 acornary_app 实测不能 CREATE public schema 对象、UPDATE auth_owners 或 UPDATE events；应用池上限 5，statement_timeout 为 15 秒。
-- 备份 timer 已安装，状态 disabled / inactive；未生成正式库存的日常备份或迁移快照。
+- 预验收阶段已安装备份 timer，状态 disabled / inactive；当时未生成正式库存的日常备份或迁移快照。随后正式切换生成的一次性快照见下文，日常备份仍关闭。
 - 新增两个 OAuth 客户端并发修改同一物品的测试：一个成功，一个 REVISION_CONFLICT；同映射 Actor，revision 仅增加一次。
 - 云预验收非空库手动备份后恢复到独立数据库 `acornary_restore_20260923042558`，25 张表的条数与完整行内容哈希全部一致。只测试了隔离库，没有对正式库存做日常备份。
 - 真实本机 Codex 全局 MCP 连接已添加，CLI 返回 `Successfully logged in`；真实 ChatGPT 自定义 MCP 也完成 OAuth 连接。数据库确认两个官方 CIMD client ID 的刷新令牌均发生轮换，唯一启用的所有者映射到原有 installation 的 Actor／Household。两端业务操作闭环单独验收，不以授权成功替代。
@@ -40,4 +40,4 @@
 
 本地正式应用与数据库已停写，数据已恢复到独立云端生产库；未启用日常备份。已有 Stage1 验证记录保留为历史证据。
 
-公开域名已指向生产库；真实客户端验收无待处理的用户步骤。本次源码、部署脚本和验证文档统一纳入 Stage2 Git 提交。
+公开域名已指向生产库；Stage2 首次切换的真实客户端验收无待处理的用户步骤。源码、部署脚本和验证文档已纳入 Stage2 Git 提交并整合进 main。后续版本发布设施及其首次正式 tag 验收属于独立进度，见 [项目进度](./progress.md) 和 [发布验证](./release-verification.md)；Stage2 完成不代表自动发布的生产闭环已经验收。

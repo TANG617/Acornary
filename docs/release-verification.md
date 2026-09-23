@@ -13,6 +13,7 @@
 ## GitHub 与镜像
 
 - [首轮 GitHub CI](https://github.com/TANG617/Acornary/actions/runs/35836581007) 通过，包含真实 PostgreSQL、浏览器和容器恢复测试。
+- 最后一次代码修改 `f2649b5fe2ce7a643a486d0d9d18f48f060b5a03` 的 [完整 CI](https://github.com/TANG617/Acornary/actions/runs/35838344952) 通过，覆盖控制器边界修正及不依赖本机配置的 SSH 客户端；包含 32 项 Vitest、3 项 Playwright、15 项发布测试和独立容器迁移／恢复。
 - [手动 Release](https://github.com/TANG617/Acornary/actions/runs/35836631809) 测试与构建发布通过，production deploy 明确 skipped；未创建正式标签。
 - 单独重跑同一工作流的 publish job 通过，复用既有版本镜像，deploy 仍为 skipped。
 - 首个镜像 `build-a0c250c8db26`，源码 `a0c250c8db2614d11f30772ace3794c247b459e8`，digest `sha256:be2ddab8c395c0589f4f77a3daa91472bee55eabd0afbeb9ca00e9975c653792`。该构建早于随后补充的控制器边界修正；后续正式 tag 将使用自己的完整提交与 digest。
@@ -34,3 +35,7 @@
 未创建或推送任何正式版本标签。首次正式 tag 的真实自动部署，以及随后 Codex／ChatGPT 读取，需在用户选择正式版本后执行；不能用手动 build-only 或隔离测试宣布此项通过。当前线上仍为 Stage2 旧镜像，`/health` 暂时只有 `status`；版本和 commit 字段随首次应用更新生效。
 
 真实客户端 OAuth 授权在既有 Stage2 已验证。本轮确认了认证表／配置持久保留及隔离 Web 会话跨更新，但尚未在首次正式版本更新后重新核对真实 Codex／ChatGPT 的既有授权。
+
+## 进度复核（2026-09-23）
+
+本次文档整理只读检查 GitHub 和服务器：远端无版本标签，生产任务仍为 0，当前发布记录为 bootstrap。正式容器仍运行上述旧镜像，启动时间保持 `2026-09-23T07:23:40.33072672Z`；公网健康为 ok，Runbuoy 为 ready，备份 timer 仍 disabled／inactive。本地原应用与 PostgreSQL 均为 exited。production Environment 保持仅 `v*` 标签可部署且无人工审批。本次未重跑真实客户端验收、创建正式标签或修改生产数据。后续顺序见 [项目进度](./progress.md)。

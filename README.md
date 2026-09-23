@@ -10,6 +10,8 @@
 
 Stage2 已完成双端预验收、整库迁移、生产入口切换及正式 Codex／ChatGPT 授权和读取核对。正式地址为 [acornary.protium.top](https://acornary.protium.top)，MCP 为 `https://acornary.protium.top/mcp`；本地原库存已停写，云端为唯一正式库存。日常备份默认关闭，保留一次迁移前快照。实际通过项和验证边界见 [Stage2 验证记录](./docs/stage2-verification.md)，操作说明见 [云端运行](./docs/cloud-runtime.md)。核心模型仍为三张表；004 migration 增加认证支撑表，检查器仍只展示原有业务表。历史结果保留在 [Stage1 验证记录](./docs/stage1-verification.md)。
 
+版本发布设施已落地：GitHub Actions 测试、公开 GHCR 镜像和服务器受限部署命令均已验证。**首次正式 tag 自动部署仍待执行，线上继续运行原 Stage2 镜像。** 普通 main push 只触发 CI；正式 `vX.Y.Z` 才自动更新生产，有新增 migration 时先备份。当前阶段、代码与线上差异、下一步统一见 [项目进度](./docs/progress.md)。
+
 **本地模式**保留 Stage1：应用、PostgreSQL、Codex 和浏览器在同一电脑运行，Web 只读展示两棵树及业务表的实际记录，分开呈现派生结果和 API 响应。**云模式**增加所有者登录与双客户端 OAuth；两种模式共用领域规则。图片附件、模板升级、FEFO、多用户和后台提醒继续后置。
 
 沿用 TypeScript / Node.js 24 LTS、Fastify 5、官方 MCP TypeScript SDK v2、PostgreSQL 18、Drizzle、Zod 4、React / Vite；Stage2 增加 Better Auth 1.7.5 的 MCP／CIMD／JWT 和共享 Caddy HTTPS 入口。`local` 模式使用回环地址与个人凭证，`cloud` 模式只接受 OAuth，不回退为个人凭证。完整边界见 [架构](./docs/architecture.md)。
@@ -55,6 +57,7 @@ CatalogNode / Item 的变化 → Event
 
 ## Documentation
 
+- [项目进度与下一步](./docs/progress.md)
 - [版本标签与自动发布](./docs/releases.md)
 - [发布验证记录](./docs/release-verification.md)
 - [本地运行与备份](./docs/local-runtime.md)

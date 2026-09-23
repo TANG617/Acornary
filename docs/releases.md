@@ -4,6 +4,8 @@
 
 本流程允许短暂停服。业务模型、数据库卷、所有者、OAuth 签名密钥及授权记录保持持久；不会自动升级 PostgreSQL、重建 Caddy 或修改 Runbuoy。实际配置与测试结果见 [发布验证记录](./release-verification.md)。
 
+截至 2026-09-23，一次性配置已经完成，手动构建发布和隔离故障验证均通过，正式 tag 尚未推送。现有服务器无需再次执行 bootstrap；下一步是选择版本并完成首次生产自动部署及双客户端读取核对。阶段总览见 [项目进度](./progress.md)。
+
 ## 工作流
 
 - `CI`：分支 push、PR，以及 Release 调用。Node 24 容器内执行类型检查、Vitest、真实 PostgreSQL 18、构建和 Playwright；另执行 Python 发布控制器测试及独立容器迁移／恢复测试。数据库、网络、账号与 TLS 都为临时测试资源，不读取本机 `.env`。

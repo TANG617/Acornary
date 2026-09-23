@@ -2,6 +2,8 @@
 
 目标地址：`https://acornary.protium.top`，MCP：`https://acornary.protium.top/mcp`。美国服务器 `47.77.197.236`。当前正式切换状态以 [验证记录](./stage2-verification.md) 为准，不能把预验收环境当成正式库存。
 
+正式切换已完成，云端为唯一正式库存。后续自动发布设施已配置，但首次正式 tag 部署尚未执行；目前运行的仍是 Stage2 镜像。代码、构建镜像与线上状态的对应关系见 [项目进度](./progress.md)，不要将下文初次部署步骤重复执行到现有正式库。
+
 ## 运行模式与数据
 
 `local` 保留回环地址、个人凭证与只读本地检查器。`cloud` 必须配置 HTTPS origin、32 字符以上 Better Auth secret、精确 Caddy 代理 IP、数据库连接；只接受 OAuth，Web 也必须登录。云应用启动不执行 migration，不自动创建 Household；缺少安装记录或所有者绑定时拒绝启动。
