@@ -1,0 +1,86 @@
+name: acornary-${ACORNARY_ENVIRONMENT:?Choose preacceptance or production}
+services:
+  postgres:
+    image: postgres:18-bookworm
+    env_file: ${ACORNARY_CONFIG_DIR:?Set private config directory}/postgres.env
+    command:
+      [
+        postgres,
+        -c,
+        max_connections=20,
+        -c,
+        shared_buffers=64MB,
+        -c,
+        work_mem=2MB,
+        -c,
+        statement_timeout=15000,
+        -c,
+        idle_in_transaction_session_timeout=15000,
+      ]
+    volumes: [pgdata:/var/lib/postgresql]
+    networks: [database]
+    mem_limit: 256m
+    restart: unless-stopped
+    logging: &logging
+      driver: json-file
+      options: { max-size: 10m, max-file: '3' }
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U acornary_migrator -d acornary']
+      interval: 5s
+      timeout: 3s
+      retries: 30
+  app:
+    image: ${ACORNARY_IMAGE:?Set immutable release image}
+    user: '1000:1000'
+    env_file: ${ACORNARY_CONFIG_DIR}/app.env
+    environment:
+      NODE_ENV: production
+      NODE_OPTIONS: --max-old-space-size=256
+      ACORNARY_MODE: cloud
+      BIND_HOST: 0.0.0.0
+    networks:
+      database: {}
+      edge:
+        aliases: ['acornary-${ACORNARY_ENVIRONMENT}-app']
+    depends_on:
+      postgres: { condition: service_healthy }
+    read_only: true
+    tmpfs: ['/tmp:size=32m,mode=1777']
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 384m
+    restart: unless-stopped
+    logging: *logging
+    healthcheck:
+      test:
+        [
+          CMD,
+          node,
+          -e,
+          "fetch('http://127.0.0.1:3210/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 4
+  admin:
+    profiles: [ops]
+    image: ${ACORNARY_IMAGE}
+    user: '1000:1000'
+    env_file: ${ACORNARY_CONFIG_DIR}/migration.env
+    networks: [database]
+    read_only: true
+    tmpfs: ['/tmp:size=32m,mode=1777']
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    command: [node, dist/apps/server/src/migrate.js]
+    # Interactive owner email/password must never enter Docker's log files.
+    logging:
+      driver: none
+volumes:
+  pgdata:
+networks:
+  database:
+    internal: true
+  edge:
+    external: true
+    name: acornary-edge-v1

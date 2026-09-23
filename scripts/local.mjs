@@ -11,6 +11,8 @@ import { spawnSync } from 'node:child_process';
 import { resolve } from 'node:path';
 process.chdir(resolve(import.meta.dirname, '..'));
 const action = process.argv[2] ?? 'help';
+if (existsSync('.local/stage2-cutover/SOURCE_STOPPED') && ['init', 'start', 'codex', 'backup'].includes(action))
+  throw new Error('This local inventory was frozen for cloud cutover. Use an independent development database, or the documented rollback procedure; do not restart the original inventory.');
 function docker(args, options = {}) {
   const r = spawnSync('docker', ['compose', ...args], { stdio: 'inherit', ...options });
   if (r.status !== 0) process.exit(r.status ?? 1);

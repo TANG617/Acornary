@@ -10,6 +10,7 @@ import {
 import { createRootRoute, createRouter, RouterProvider } from '@tanstack/react-router';
 import Markdown from 'react-markdown';
 import './style.css';
+import { AuthGate } from './auth';
 type Target = { kind: 'ITEM' | 'CATALOG_NODE'; id: string };
 type Destination =
   | { target: Target }
@@ -32,6 +33,7 @@ const attr = (o: any, id: string) => o.attributes?.find((a: any) => a.template_i
 async function request(path: string, input: unknown) {
   const r = await fetch(`${path}?input=${encodeURIComponent(JSON.stringify(input))}`);
   const data = await r.json();
+  if (r.status === 401) window.location.replace('/login');
   if (!r.ok) throw new Error(data.error?.message ?? '读取失败');
   return data;
 }
@@ -660,7 +662,9 @@ const router = createRouter({ routeTree: rootRoute });
 createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <QueryClientProvider client={client}>
-      <RouterProvider router={router} />
+      <AuthGate>
+        <RouterProvider router={router} />
+      </AuthGate>
     </QueryClientProvider>
   </React.StrictMode>,
 );

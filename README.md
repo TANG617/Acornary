@@ -8,13 +8,15 @@
 
 ## 当前状态
 
-Stage1 运行代码、数据库迁移、MCP 服务、只读 GUI 与自动化测试已落地。本地已有库存；当前属性直接内嵌到物品和目录行，核心模型为三张表，整个数据库共十一张表；开发者检查器忠实展示 PostgreSQL 行。真实 Codex 的完整 Stage1 验收与本轮自动化验证分别记录。实际证据见 [验证记录](./docs/stage1-verification.md)。
+Stage2 已完成双端预验收、整库迁移、生产入口切换及正式 Codex／ChatGPT 授权和读取核对。正式地址为 [acornary.protium.top](https://acornary.protium.top)，MCP 为 `https://acornary.protium.top/mcp`；本地原库存已停写，云端为唯一正式库存。日常备份默认关闭，保留一次迁移前快照。实际通过项和验证边界见 [Stage2 验证记录](./docs/stage2-verification.md)，操作说明见 [云端运行](./docs/cloud-runtime.md)。核心模型仍为三张表；004 migration 增加认证支撑表，检查器仍只展示原有业务表。历史结果保留在 [Stage1 验证记录](./docs/stage1-verification.md)。
 
-**Stage1：本地库存操作与只读模型检查器。** 应用、PostgreSQL、Codex 和浏览器在同一电脑运行；通过 Codex 操作明确 UUID 的库存与文字笔记，Web 只读展示两棵树及 11 张表的实际记录，分开呈现派生结果和 API 响应。自动选取与 FEFO、图片附件、模板升级、云托管、ChatGPT、HTTPS、OAuth、注册登录及后台任务后置。
+**本地模式**保留 Stage1：应用、PostgreSQL、Codex 和浏览器在同一电脑运行，Web 只读展示两棵树及业务表的实际记录，分开呈现派生结果和 API 响应。**云模式**增加所有者登录与双客户端 OAuth；两种模式共用领域规则。图片附件、模板升级、FEFO、多用户和后台提醒继续后置。
 
-Stage1 沿用 TypeScript / Node.js 24 LTS、Fastify 5、官方 MCP TypeScript SDK v2、PostgreSQL 18、Drizzle、Zod 4、React / Vite；Docker Compose 运行应用与数据库，端口仅绑定本机，MCP 使用本地个人访问凭证。长期保留云托管方向与 Better Auth / Caddy 选型。完整边界见 [架构与 Stage1 范围](./docs/architecture.md)。锁定依赖、启动、连接、备份和测试命令见 [本地运行](./docs/local-runtime.md)。
+沿用 TypeScript / Node.js 24 LTS、Fastify 5、官方 MCP TypeScript SDK v2、PostgreSQL 18、Drizzle、Zod 4、React / Vite；Stage2 增加 Better Auth 1.7.5 的 MCP／CIMD／JWT 和共享 Caddy HTTPS 入口。`local` 模式使用回环地址与个人凭证，`cloud` 模式只接受 OAuth，不回退为个人凭证。完整边界见 [架构](./docs/architecture.md)。
 
 ## 本地启动
+
+以下用于独立本地开发环境。已迁移工作区保留停写标记，禁止重新启动原正式库存；日常使用请连接云端 MCP。
 
 ```sh
 node scripts/local.mjs init

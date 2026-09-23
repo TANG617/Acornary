@@ -338,3 +338,26 @@ summary {
     padding: 12px;
   }
 }
+/* Authentication changes access, never the inspector's read-only inventory UI. */
+.auth-panel {
+  max-width: 540px;
+  margin: 10vh auto;
+  padding: 32px;
+}
+.auth-panel label {
+  display: block;
+  margin: 18px 0;
+}
+.auth-panel input {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+}
+.auth-panel code {
+  overflow-wrap: anywhere;
+}
+.session-bar {
+  padding: 8px 24px;
+  text-align: right;
+}

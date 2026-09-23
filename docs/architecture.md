@@ -2,6 +2,8 @@
 
 本文件定义两棵树模型的应用边界和接口契约，配合 [Domain model](./domain-model.md) 和 [Examples](./examples.md) 使用。Stage1 已有运行代码、锁文件、数据库 migration 与测试。启动方式见 [本地运行](./local-runtime.md)，实际验证与待完成项见 [验证记录](./stage1-verification.md)。
 
+Stage2 云模式的当前约定见下述 1.6 节，部署操作与验收事实分别见 [云端运行](./cloud-runtime.md)、[Stage2 验证](./stage2-verification.md)。Stage1 段落仍定义本地模式；当前原本地库存已迁移并保持停写，云端是唯一正式库存。
+
 ## 1. 交付形态与技术选择
 
 ### 1.1 Stage1 已确认边界
@@ -26,11 +28,11 @@ Stage1 支持日常库存操作和文字 Note；Web 只读。操作仅接受明�
 | 数据访问 | Drizzle ORM、node-postgres、显式 SQL migration | 通过 Drizzle 执行绑定参数 SQL；约束、锁与递归查询使用显式 SQL |
 | 契约与模板 | Zod 4、生成的 JSON Schema | 七个内置模板 v1、工具参数及只读 HTTP 契约 |
 | 本地身份 | 初始化生成的个人访问凭证、统一操作者与 Household 上下文 | MCP 凭证校验，Web 本机只读浏览无需登录 |
-| 云端身份 | Better Auth 及其 MCP / OAuth 插件 | 后续阶段接入；Stage1 不实施 |
+| 云端身份 | Better Auth 1.7.5、MCP／CIMD／JWT 插件 | Stage2 授权码、PKCE S256、所有者登录 |
 | Web | React、Vite、TanStack Router / Query | 双树导航、详情、文字笔记与事件的只读 SPA |
 | 计量 | decimal.js | 十进制字符串参与精确运算，避免浮点误差影响剩余量 |
 | 本地部署 | Docker Compose、持久卷 | 同机运行应用与 PostgreSQL，端口仅在本机可达 |
-| 云端入口 | Linux 云服务器、Caddy、HTTPS | 后续阶段接入；Stage1 不实施 |
+| 云端入口 | 美国 Linux 云服务器、共享 Caddy、HTTPS | Stage2，独立 Acornary 网络和数据库 |
 | 测试与日志 | Vitest、真实 PostgreSQL 集成测试、Playwright、Pino | 分别验证领域、数据库约束、只读浏览流程及运行故障 |
 
 ### 1.3 Stage1 本地运行与连接
@@ -61,7 +63,7 @@ Compose、初始化、Codex 包装脚本与操作说明已提供，见 [本地�
 - 条码唯一映射使用同事务维护的派生索引表及唯一约束；属性仍是事实来源，索引不提供独立编辑入口。
 - 保留已有命令名称、set / unset、affected_objects 和错误语义；技术选型不改变领域契约。
 
-核心模型是 items、catalog_nodes、attribute_templates 三张表；加上 households、actors、notes、events、operations、barcode_index、installations、migrations，数据库共十一张表。属性绑定按 template_id 排序，缺省为 []，成员为 template_id、template_version、values、created_at、updated_at。
+核心模型是 items、catalog_nodes、attribute_templates 三张表；原有业务及支撑表共十一张，004 migration 另加十四张认证表，总计二十五张。认证记录不进入检查器。属性绑定按 template_id 排序，缺省为 []，成员为 template_id、template_version、values、created_at、updated_at。
 
 属性约束主要由共享领域服务保证：检查成员结构、同家庭模板版本、适用对象、同模板唯一及完整值。数据库仅对 attributes 检查非 null 和数组形状；核心关系约束保持。不存在属性模板引用触发器、模板外键或绑定唯一索引，直接 SQL 修改数组可绕过领域校验。所有正常写入口仍统一校验、加锁和记录事件。
 
@@ -77,15 +79,37 @@ Compose、初始化、Codex 包装脚本与操作说明已提供，见 [本地�
 | 实例查询 | 名称、条码、生命周期和日期过滤；分开显示件数、未知生命周期数量、内容量汇总 |
 | 固定检查视图 | 家庭、操作者、全部模板版本、操作记录（含无变化请求）、事件、笔记、条码索引、初始化槽位和迁移信息 |
 
-以上覆盖当前全部 11 张表。数据库记录直接使用 PostgreSQL `to_jsonb(t)`，附列类型、数据库默认值及约束／外键说明；不通过业务对象反向构造。记录按页访问（默认 10，最高 200），完整 JSON 可展开、滚动、复制；未记录字段保留原 null 或缺失，不添加业务默认值。外键链接跳转至对应对象、模板版本、操作者或操作／事件记录。
+以上固定覆盖原有 11 张业务及支撑表；认证表从不加入白名单。数据库记录直接使用 PostgreSQL `to_jsonb(t)`，附列类型、数据库默认值及约束／外键说明；不通过业务对象反向构造。记录按页访问（默认 10，最高 200），完整 JSON 可展开、滚动、复制；未记录字段保留原 null 或缺失，不添加业务默认值。外键链接跳转至对应对象、模板版本、操作者或操作／事件记录。
 
 固定只读端点 `GET /api/debug?input=<JSON>` 使用表白名单和预定义过滤，没有 SQL 或写入入口。各次读取在 READ ONLY + REPEATABLE READ 事务中执行，校验 Household/Actor；迁移表是安装级元数据，其他表按家庭隔离。Host / Origin 检查与业务 HTTP 一致，不公开访问凭证。分页是每次请求的一致快照；并发变更时刷新回首页重新读取，不承诺跨页固定历史快照。
 
 允许树展开、查询、关联跳转、复制完整 ID、手动刷新；窗口聚焦及每 5 秒刷新当前视图。Note 同时显示完整原始 Markdown 和不执行原始 HTML 的安全预览。不提供编辑表单、拖拽移动、上传或其他业务写入交互；业务写入通过 MCP。
 
-### 1.6 后续阶段保留方向
+### 1.6 Stage2 云端与身份边界
 
-长期云托管通过 Caddy 提供 HTTPS；Web 使用会话，远程 MCP 使用 OAuth，并接入 ChatGPT。Better Auth、最小登录与授权页面、User 和成员关系按该阶段实现，公开注册及多用户管理仍需另行确定交付范围。
+正式域名为 `https://acornary.protium.top`，MCP 为 `/mcp`。Caddy 与 Runbuoy 共享 HTTPS 入口，Acornary 应用和 PostgreSQL 不发布宿主机端口。入口网络与数据库网络分开；应用精确校验代理地址、Host 和 Origin。`ACORNARY_MODE=cloud` 缺少必要配置或既有安装／所有者绑定时拒绝启动，运行账号不执行迁移。
+
+仅预置一个所有者，禁止公开注册。Better Auth 的用户通过 `auth_owners` 唯一映射到既有 Actor 和 Household；Codex 与 ChatGPT 的客户端身份不改变业务 Actor，也不改变旧幂等作用域。Web 使用安全会话 Cookie；所有业务读取与调试端点要求所有者登录。远程 MCP 使用授权码＋PKCE S256、CIMD 和显式授权同意，DCR 关闭；按工具校验 inventory:read／inventory:write。账号启用状态和绑定在每次请求检查，且发生在幂等重放之前。
+
+访问 JWT 校验签名、issuer、audience、有效期和 scope，有效期 5 分钟；刷新令牌 30 天并轮换、拒绝旧令牌重用。撤销授权停止续期，已签发 JWT 最多继续有效 5 分钟；停用账号立即阻止后续请求。所有者创建、密码恢复、停用和授权撤销通过交互式运维命令完成，不依赖邮件服务。认证记录及秘密不进入业务结果或检查器。
+
+所有工具仍要求明确对象 ID；助手负责查询和解析。已知差异影响选择时先澄清；在用户确认范围内无已知差异时可以选取并报告实际 UUID。超时重试保留幂等键和参数；版本冲突后重新查询并判断意图，不直接替换 revision 强行重试。推荐不会自动写库存。
+
+云端通过真实 Codex 和 ChatGPT 的隔离库存预验收后，才停止本地正式应用、生成一次性迁移快照并整库切换。云端正式写入前可回退原库；写入后须先保全云端最新数据。日常备份功能默认关闭，不启用定时或异机备份。多用户、公开上架、附件、OCR、提醒和离线同步后置。
+
+```mermaid
+flowchart LR
+    Codex -->|OAuth + MCP| Caddy
+    ChatGPT -->|OAuth + MCP| Caddy
+    Browser[浏览器] -->|会话 Cookie + 只读 API| Caddy
+    Caddy -->|独立入口网络| App[Acornary]
+    Caddy --> Runbuoy[既有 Runbuoy]
+    App --> Identity[认证用户映射到既有 Actor / Household]
+    Identity --> Service[共享领域服务]
+    Service -->|私有数据库网络| PG[(PostgreSQL 18)]
+```
+
+### 1.7 后续阶段保留方向
 
 图片附件后续通过 BlobStore 接口访问，初始可用本地持久卷，未来可替换为 S3 兼容存储。可靠媒体任务或主动提醒采用 PostgreSQL 持久任务；关键投递不能仅依赖进程内定时器。以上不属于 Stage1 的依赖或验收条件。
 
@@ -275,7 +299,7 @@ Stage1 备份覆盖 PostgreSQL、模板版本及配置和凭证，文字 Note �
 - 重复初始化不重复生成 Household、模板或隐藏 SKU；停止、重启后数据完整；完成一次 PostgreSQL 备份恢复核对。
 - Web 查询与 MCP 查询返回一致事实；Web 只读 API 无法写入，无有效凭证的 MCP 写入被拒绝。用两个家庭的测试数据验证隔离。
 
-领域测试使用 Vitest，事务与并发测试使用真实 PostgreSQL，只读 Web 关键浏览流程使用 Playwright。实际 MCP 验收目标为本机 Codex；ChatGPT、OAuth、附件、模板升级和后台任务按后续阶段另行验收。
+领域测试使用 Vitest，事务与并发测试使用真实 PostgreSQL，只读 Web 关键浏览流程使用 Playwright。Stage1 的实际 MCP 目标为本机 Codex；Stage2 增加 OAuth、真实 Codex／ChatGPT 双端、云部署与完整迁移验收，证据分别记录，不能以 SDK 测试替代真实客户端。附件、模板升级和后台任务仍后置。
 
 ### 选型参考
 

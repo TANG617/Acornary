@@ -1,0 +1,16 @@
+# Appended LAST to every Runbuoy Compose command. Existing default network,
+# 172.30.77.10 proxy identity, certificates, ports and volumes are preserved.
+services:
+  caddy:
+    command: [caddy, run, --config, /etc/acornary/ingress/Caddyfile, --adapter, caddyfile]
+    volumes:
+      - /etc/acornary/ingress:/etc/acornary/ingress:ro
+    networks:
+      default:
+        ipv4_address: 172.30.77.10
+      acornary_edge:
+        ipv4_address: 172.30.78.10
+networks:
+  acornary_edge:
+    external: true
+    name: acornary-edge-v1

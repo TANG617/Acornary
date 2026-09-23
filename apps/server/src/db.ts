@@ -1,7 +1,14 @@
 import pg from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { sql } from 'drizzle-orm';
-export const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 10 });
+export const pool = new pg.Pool({
+  connectionString: process.env.DATABASE_URL,
+  max: process.env.ACORNARY_MODE === 'cloud' ? 5 : 10,
+  connectionTimeoutMillis: 5000,
+  idleTimeoutMillis: 30000,
+  statement_timeout: 15000,
+  idle_in_transaction_session_timeout: 15000,
+});
 export type Client = pg.PoolClient;
 // SQL remains explicit; every $n value becomes a bound Drizzle parameter.
 export async function query<T = any>(

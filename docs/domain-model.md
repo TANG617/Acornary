@@ -55,6 +55,8 @@ erDiagram
 
 核心三张表为 catalog_nodes、items、attribute_templates；整个 Stage1 数据库共十一张表。属性绑定直接位于所属对象的 attributes JSONB 中，不是独立实体。图中模板校验关系由领域服务保证，不是数据库外键；模板按所属家庭、ID 和版本定位。Event 恰好记录一个 CatalogNode 或 Item 的变化。NoteAttachment 是后续领域实体，尚未建表。自关联的父节点可为空；每个家庭允许多个根，界面可以将它们显示在一个虚拟根下，虚拟根不是第三类领域实体。
 
+Stage2 的 004 migration 在该业务基线之外增加认证支撑表，映射到既有 Household／Actor，不改变核心模型或对象身份。认证数据不属于只读开发者检查器的展示范围。
+
 ```mermaid
 flowchart LR
     subgraph Catalog[CatalogNode 分类与商品树]

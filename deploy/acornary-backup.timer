@@ -1,0 +1,8 @@
+# Installed but NOT enabled. Explicit operator opt-in only.
+[Unit]
+Description=Acornary optional daily local backup
+[Timer]
+OnCalendar=*-*-* 04:00:00 UTC
+Persistent=false
+[Install]
+WantedBy=timers.target

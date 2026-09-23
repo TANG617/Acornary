@@ -136,6 +136,23 @@ it('migrates nonempty 001 records in one transaction, preserving identities, his
     await expect(c.query("UPDATE events SET source='changed'")).rejects.toThrow('append-only');
     await expect(c.query("UPDATE items SET attributes='{}'::jsonb")).rejects.toThrow();
     await expect(c.query('UPDATE items SET attributes=NULL')).rejects.toThrow();
+    const businessTables = (
+      await c.query("SELECT tablename FROM pg_tables WHERE schemaname='public' ORDER BY tablename")
+    ).rows.map((r) => r.tablename);
+    const businessSnapshot = async () => {
+      const snapshot: Record<string, unknown> = {};
+      for (const t of businessTables)
+        snapshot[t] = sorted(
+          (await c!.query(`SELECT to_jsonb(t) AS row FROM "${t}" t`)).rows.map((r) => r.row),
+        );
+      return snapshot;
+    };
+    const beforeAuth = await businessSnapshot();
+    await c.query('BEGIN');
+    await c.query(await readFile('migrations/004_cloud_auth.sql', 'utf8'));
+    await c.query('COMMIT');
+    expect(await businessSnapshot()).toEqual(beforeAuth);
+    await expect(c.query("UPDATE events SET source='changed'")).rejects.toThrow('append-only');
   } finally {
     await c?.end();
     await admin.query(`DROP DATABASE IF EXISTS ${database}`);

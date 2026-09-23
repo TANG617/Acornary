@@ -2,12 +2,16 @@
 
 本目录记录 Acornary / 松仓 v1 的唯一产品与工程基线。Stage1 代码已落地，实际通过与尚未通过的验证见 [验证记录](./stage1-verification.md)。
 
+Stage2 已完成真实双端预验收、正式数据迁移与入口切换，两端正式授权和读取核对均通过。美国云端为唯一正式库存，本地原库停写；Codex／ChatGPT 使用 OAuth，Web 登录后只读。实际验证及边界见 [Stage2 验证](./stage2-verification.md)，操作见 [云端运行](./cloud-runtime.md)。以下 Stage1 段落描述本地模式与历史阶段，不表示云模式允许匿名读取或个人凭证访问。
+
 Stage1 约定为同一电脑上的本地部署：Codex 通过带个人访问凭证的 MCP 操作明确 UUID 的库存和文字 Note；Web 无需登录，仅作只读开发者检查器，核心模型为三张表，按对象覆盖数据库全部 11 张表，分开显示数据库记录、派生结果和 API 响应。自动选取与 FEFO、模板升级、图片附件、云托管、ChatGPT、HTTPS、OAuth、注册登录及后台任务后置。长期技术方向保留，阶段边界统一记录于 Architecture，不另立平行方案。
 
 ## 阅读顺序
 
 | 文档 | 内容 |
 | --- | --- |
+| [云端运行](./cloud-runtime.md) | Stage2 部署、OAuth、账号运维、切换与备份开关 |
+| [Stage2 验证](./stage2-verification.md) | 自动化、真实双端、云环境与正式迁移分别记录 |
 | [本地运行](./local-runtime.md) | 启动、停止、Codex 连接、测试和备份恢复 |
 | [验证记录](./stage1-verification.md) | 自动化证据、真实 Codex 结果及未完成项 |
 | [Domain model](./domain-model.md) | CatalogNode / Item 两棵树、稳定身份、最小字段、七个可选属性模板、事件与不变量；包含静态关系图 |

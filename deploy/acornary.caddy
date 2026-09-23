@@ -1,0 +1,14 @@
+acornary.protium.top {
+    request_body {
+        max_size 1MB
+    }
+    # Access URLs may carry authorization codes: no access log for this site.
+    reverse_proxy acornary-production-app:3210 {
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-Proto https
+        transport http {
+            dial_timeout 5s
+            response_header_timeout 30s
+        }
+    }
+}
