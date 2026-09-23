@@ -120,6 +120,20 @@ class ReleaseTests(unittest.TestCase):
         self.assertEqual(job['phase'], 'failed'); self.assertTrue(job['recovered'])
         self.assertEqual(self.backend.image, 'old'); self.assertTrue(self.backend.started)
 
+    def test_journal_failure_restores_current_record_with_app(self):
+        save = r.save_json
+        failed = []
+        def fail_once(path, value):
+            if value.get('phase') == 'succeeded' and not failed:
+                failed.append(True)
+                raise OSError('simulated journal write failure')
+            save(path, value)
+        with patch.object(r, 'save_json', side_effect=fail_once):
+            job = self.run_release()
+        self.assertEqual(job['phase'], 'failed')
+        self.assertTrue(job['recovered'])
+        self.assertEqual(r.read_json(self.root / 'current.json')['image'], 'old')
+
     def test_failed_recovery_needs_attention(self):
         self.backend.fail = 'recovery'
         self.assertEqual(self.run_release()['phase'], 'needs_attention')

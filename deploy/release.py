@@ -277,6 +277,7 @@ class Controller:
                         self.backend.set_image(previous['image'])
                         self.backend.start()
                         self.backend.check(previous)
+                        save_json(self.root / 'current.json', previous)
                         self.update(job, 'failed', error=str(error), recovered=True)
                     except Exception:
                         try: self.backend.stop()
@@ -325,7 +326,7 @@ def main():
                 active = subprocess.run(['systemctl', 'is-active', '--quiet', unit]).returncode == 0
                 if not active:
                     try:
-                        command(['systemd-run', '--unit=' + unit, '--collect', '--property=Type=exec',
+                        command(['systemd-run', '--unit=' + unit, '--collect', '--property=Type=simple',
                                  '/usr/local/sbin/acornary-release', 'worker', job['id']])
                     except Exception:
                         controller.update(job, 'needs_attention', error='Could not confirm worker submission')
@@ -336,7 +337,14 @@ def main():
             active = subprocess.run(['systemctl', 'is-active', '--quiet', 'acornary-release-' + job['id']]).returncode == 0
             if not active:
                 # Never guess whether SQL committed after power loss or a killed worker.
-                controller.update(job, 'needs_attention', error='Worker interrupted; inspect server journal')
+                try:
+                    with lock(controller.root / 'deploy.lock', blocking=False):
+                        # The worker may have completed since the first read.
+                        job = read_json(controller.path(args[1]))
+                        if job['phase'] not in TERMINAL and time.time() - job['updated_at'] > 30:
+                            controller.update(job, 'needs_attention', error='Worker interrupted; inspect server journal')
+                except BlockingIOError:
+                    job = read_json(controller.path(args[1]))
         print(json.dumps(public(job)))
     elif args[0] == 'worker' and len(args) == 2:
         print(json.dumps(public(controller.perform(args[1]))))

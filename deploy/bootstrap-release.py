@@ -56,6 +56,7 @@ home = Path('/home/acornary-deploy')
 # The user cannot replace its forced command or append an unrestricted key.
 os.chown(str(home), 0, 0); home.chmod(0o755)
 (home / '.ssh').mkdir(mode=0o755)
+(home / '.ssh').chmod(0o755)  # Root umask must not prevent sshd's user-context read.
 public_key = Path(sys.argv[1]).read_text().strip()
 assert public_key.startswith('ssh-ed25519 ') and '\n' not in public_key
 auth = home / '.ssh/authorized_keys'

@@ -97,6 +97,8 @@ Compose、初始化、Codex 包装脚本与操作说明已提供，见 [本地�
 
 云端通过真实 Codex 和 ChatGPT 的隔离库存预验收后，才停止本地正式应用、生成一次性迁移快照并整库切换。云端正式写入前可回退原库；写入后须先保全云端最新数据。日常备份功能默认关闭，不启用定时或异机备份。多用户、公开上架、附件、OCR、提醒和离线同步后置。
 
+后续更新采用 [版本标签发布](./releases.md)：main 中的正式语义版本标签触发 GitHub Actions、公开 GHCR 和受限 SSH 部署，服务器固定镜像 digest。更新允许短暂停服，仅有新增 migration 时生成发布前备份；迁移与运行角色授权在同一事务中完成。迁移已提交或提交状态不明时禁止自动回退旧应用。共享 Caddy、PostgreSQL 版本、正式数据卷与认证配置不随应用发布重建。健康接口公开 `status`、`version`、`commit`，同时检查所需迁移已登记，不返回业务或认证数据。
+
 ```mermaid
 flowchart LR
     Codex -->|OAuth + MCP| Caddy
