@@ -55,6 +55,8 @@ CatalogNode / Item 的变化 → Event
 
 ## Documentation
 
+- [版本标签与自动发布](./docs/releases.md)
+- [发布验证记录](./docs/release-verification.md)
 - [本地运行与备份](./docs/local-runtime.md)
 - [实际验证记录](./docs/stage1-verification.md)
 - [文档索引](./docs/README.md)

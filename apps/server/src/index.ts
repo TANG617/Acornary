@@ -3,6 +3,7 @@ import { initialize } from './initialize.js';
 import { buildApp } from './app.js';
 import { pool, query } from './db.js';
 import { runtimeConfig } from './config.js';
+import { verifyReleaseMigrations } from './release.js';
 const config = runtimeConfig();
 let token = '';
 let installed;
@@ -21,6 +22,7 @@ if (config.mode === 'local') {
       'Cloud database must be migrated, initialized and bound to an owner before startup.',
     );
 }
+await verifyReleaseMigrations();
 const app = await buildApp({ ...installed, source: 'MCP' }, token, true, config);
 await app.listen({
   host: process.env.BIND_HOST ?? '127.0.0.1',

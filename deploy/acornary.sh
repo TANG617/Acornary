@@ -4,7 +4,9 @@ umask 077
 environment=${1:?Usage: acornary preacceptance|production COMMAND}; shift
 [[ $environment == preacceptance || $environment == production ]] || exit 2
 config=/etc/acornary/$environment
-compose=(docker compose --env-file "$config/deploy.env" -f /opt/acornary/current/compose.cloud.yaml)
+compose_file=/etc/acornary/compose.cloud.yaml
+[[ -f $compose_file ]] || compose_file=/opt/acornary/current/compose.cloud.yaml
+compose=(docker compose --env-file "$config/deploy.env" -f "$compose_file")
 action=${1:?Missing command}; shift
 case "$action" in
   owner) "${compose[@]}" --profile ops run --rm admin node dist/apps/server/src/owner.js "$@" ;;

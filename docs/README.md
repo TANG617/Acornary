@@ -10,6 +10,8 @@ Stage1 约定为同一电脑上的本地部署：Codex 通过带个人访问凭�
 
 | 文档 | 内容 |
 | --- | --- |
+| [版本发布](./releases.md) | GitHub Actions、公开 GHCR、受限 SSH、迁移备份与恢复 |
+| [发布验证](./release-verification.md) | 流水线、服务器配置和首次正式标签的验收边界 |
 | [云端运行](./cloud-runtime.md) | Stage2 部署、OAuth、账号运维、切换与备份开关 |
 | [Stage2 验证](./stage2-verification.md) | 自动化、真实双端、云环境与正式迁移分别记录 |
 | [本地运行](./local-runtime.md) | 启动、停止、Codex 连接、测试和备份恢复 |

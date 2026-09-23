@@ -17,7 +17,7 @@ const app = await buildApp(ctx, '', true, {
 });
 await app.listen({ host: '127.0.0.1', port: 3211 });
 createServer(
-  { key: readFileSync('/tls/key.pem'), cert: readFileSync('/tls/cert.pem') },
+  { key: readFileSync(`${process.env.ACORNARY_TEST_TLS_DIR ?? '/tls'}/key.pem`), cert: readFileSync(`${process.env.ACORNARY_TEST_TLS_DIR ?? '/tls'}/cert.pem`) },
   (req, res) => {
     const upstream = request(
       {

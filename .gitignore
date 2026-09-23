@@ -9,3 +9,5 @@ playwright-report/
 test-results/
 
 .pnpm-store/
+__pycache__/
+release.json

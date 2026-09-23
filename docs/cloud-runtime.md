@@ -12,7 +12,7 @@
 
 ## 构建、部署与入口
 
-在本机 Node 24 容器构建 `linux/amd64` 镜像，通过 `docker save`／SSH 传输到服务器；记录源文件摘要、镜像 SHA256 和 migrations。服务器不执行生产构建。
+后续版本采用 [版本标签与自动发布](./releases.md)：GitHub Actions 构建并推送公开 GHCR 镜像，服务器按 digest 拉取、通过独立任务更新应用。服务器不执行生产构建。以下本机 `docker save`／SSH 流程保留用于初始 Stage2 部署和受信任的运维操作。
 
 `node scripts/build-cloud.mjs` 生成按运行源码摘要命名的镜像，在 `.local/releases/<摘要>/` 保存 image.tar 和 manifest.json。部署使用其中的固定镜像名，不以滚动 latest 作为验收依据。
 
@@ -74,7 +74,7 @@ Codex 也可能同时看到从 ChatGPT 同步的同名 Plugin；它与全局 MCP
 
 ## 备份边界
 
-**日常备份默认关闭。** 本次仅对正式库存生成一次迁移前快照；恢复功能测试使用隔离库。没有异机备份链路。以下命令只有操作者显式执行时才生成备份或启用日程：
+**日常备份默认关闭。** Stage2 首次切换仅生成一次迁移前快照；后续自动发布仅在出现新增 migration 时生成发布前备份，无迁移更新不生成备份。恢复功能测试使用隔离库，没有异机备份链路。以下命令只有操作者显式执行时才生成备份或启用日程：
 
 ```sh
 acornary production backup-status

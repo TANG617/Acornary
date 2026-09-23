@@ -1,4 +1,5 @@
 import { debugRead } from './debug.js';
+import { release, verifyReleaseMigrations } from './release.js';
 import Fastify from 'fastify';
 import staticFiles from '@fastify/static';
 import { localhostHostValidation } from '@modelcontextprotocol/fastify';
@@ -117,7 +118,8 @@ export async function buildApp(
   });
   app.get('/health', async () => {
     await query(pool, 'SELECT 1');
-    return { status: 'ok' };
+    await verifyReleaseMigrations();
+    return { status: 'ok', version: release.version, commit: release.commit };
   });
   app.get('/api/session', async (req) => {
     if (!auth) return { mode: 'local', authenticated: true };

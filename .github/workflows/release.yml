@@ -1,0 +1,95 @@
+name: Release
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: acornary-release-production
+  cancel-in-progress: false
+jobs:
+  identity:
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.ref.outputs.version }}
+      commit: ${{ steps.ref.outputs.commit }}
+      deploy: ${{ steps.ref.outputs.deploy }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - id: ref
+        run: node scripts/release-ref.mjs
+  test:
+    needs: identity
+    uses: ./.github/workflows/ci.yml
+    permissions:
+      contents: read
+  publish:
+    needs: [identity, test]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      digest: ${{ steps.image.outputs.digest }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: image
+        env:
+          VERSION: ${{ needs.identity.outputs.version }}
+          COMMIT: ${{ needs.identity.outputs.commit }}
+        run: node scripts/publish-image.mjs
+  deploy:
+    needs: [identity, publish]
+    if: needs.identity.outputs.deploy == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    environment:
+      name: production
+      url: https://acornary.protium.top
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Install scoped SSH credentials
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_HOST_KEYS: ${{ secrets.DEPLOY_HOST_KEYS }}
+        run: |
+          umask 077
+          printf '%s\n' "$DEPLOY_SSH_KEY" > "$RUNNER_TEMP/acornary-key"
+          printf '%s\n' "$DEPLOY_HOST_KEYS" > "$RUNNER_TEMP/acornary-known-hosts"
+      - name: Submit and monitor production release
+        env:
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+          DEPLOY_KEY_FILE: ${{ runner.temp }}/acornary-key
+          DEPLOY_HOST_KEYS_FILE: ${{ runner.temp }}/acornary-known-hosts
+          VERSION: ${{ needs.identity.outputs.version }}
+          COMMIT: ${{ needs.identity.outputs.commit }}
+          DIGEST: ${{ needs.publish.outputs.digest }}
+        run: node scripts/deploy-client.mjs
+      - name: Remove SSH credentials
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          for name in ('acornary-key', 'acornary-known-hosts'):
+              path = Path(os.environ['RUNNER_TEMP']) / name
+              if path.exists(): path.unlink()
+          PY
