@@ -22,10 +22,12 @@
 ## 服务器初始化
 
 - 控制器、专用 `acornary-deploy` 账号和冻结 Compose 配置已安装。私钥未上服务器，服务器账号不加入 Docker 组。普通 `id` 命令被 forced command 拒绝；合法格式的状态查询通过 sudo 到达控制器，未知任务返回 rejected。
+- 使用空 SSH 配置、禁用 agent、仅指定专用密钥和固定 Ed25519 Host Key，通过 ECDH P-256／AES-128-GCM 连接验证。此配置已落入发布客户端，避免依赖本机 SSH 算法偏好。
 - Python 3.6.8 编译通过；systemd 239 使用 `Type=simple`。root 拥有 home／authorized_keys，`.ssh` 可读但部署用户不可写；已修正 root umask 导致 SSH 不能读取公钥的问题。
 - 在独立 `/var/tmp/acornary-release-smoke-20260923` 使用 FakeBackend 测试 systemd worker：提交后主动终止 SSH 客户端，worker 完成；重新连接查询／重放返回既有成功结果。此测试不运行 Docker 或触碰正式数据库，真实迁移与容器恢复由上述隔离测试覆盖。
 - 当前旧镜像 `sha256:599f62f862da97352c52d5291ac09466ede0743e9d83de1dadcf0645b6f58e97` 已登记为 bootstrap 恢复基线；四份已执行 migration 与原部署清单摘要一致。
 - 正式应用未因初始化重启或更新。公网 HTTPS、OAuth discovery、匿名 context／MCP 拒绝、Runbuoy readiness 均通过。日常备份 timer 仍为 disabled／inactive，没有为无迁移初始化生成正式数据备份。
+- 核对时仍为 17 个 Item、13 个 CatalogNode、2 条 Note、37 条 Event、33 条幂等操作；生产发布任务为零，应用原启动时间未变。本地原应用与 PostgreSQL 继续处于 exited 状态。
 
 ## 尚未执行
 

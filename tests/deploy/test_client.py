@@ -14,6 +14,8 @@ class ClientTests(unittest.TestCase):
             script.write_text('''#!/usr/bin/env python3
 import json,os,sys
 from pathlib import Path
+assert sys.argv[sys.argv.index('-F')+1]=='/dev/null'
+assert 'IdentityAgent=none' in sys.argv and 'StrictHostKeyChecking=yes' in sys.argv
 p=Path(os.environ['FAKE_REQUESTS'])
 requests=json.loads(p.read_text()) if p.exists() else []
 requests.append(sys.argv[-1]);p.write_text(json.dumps(requests))

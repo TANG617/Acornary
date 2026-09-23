@@ -23,6 +23,8 @@
 
 SSH 专用账号没有 Docker 组权限。root 管理其 home／authorized_keys，`restrict` 与 forced command 只允许 `start <version> <commit> <digest>`、`status <job_id>`。部署脚本、Compose、环境与日志由 root 控制；日常版本不从镜像自动替换部署控制器或 Compose。修改基础设施需单独受信任的运维操作。
 
+发布客户端不读取用户 SSH 配置或 agent，仅使用指定密钥和已固定的 Ed25519 Host Key。连接使用已在当前服务器验证的 ECDH P-256／AES-128-GCM 算法；不启用 SSH-RSA/SHA-1 或跳过 Host Key 校验。
+
 ## 服务器任务与检查
 
 配置：`/etc/acornary/release.json`；当前版本：`/var/lib/acornary/releases/current.json`；已知迁移摘要：同目录 `schema.json`；任务日志：`jobs/<job_id>.json`。密钥、数据库连接与账号仍位于 `/etc/acornary/production/`。
